@@ -2,6 +2,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+// Determine package name + version
+
 const packageName = process.env.NPM_PINNER_PACKAGE_NAME ?? process.argv[2];
 const packageVersion =
   process.env.NPM_PINNER_PACKAGE_VERSION ?? process.argv[3];
@@ -14,6 +16,8 @@ if (packageVersion == null) {
 }
 
 console.log(`Package: ${packageName}@${packageVersion}`);
+
+// Output file setup
 
 const __filename = import.meta.url;
 const __dirname = path.dirname(fileURLToPath(__filename));
@@ -38,6 +42,7 @@ interface NpmPackageRecord {
   versions: Record<string, { dependencies: unknown[] }>;
 }
 
+// Get top level package info
 const packageVersionInfo = await getPackageVersionInfo({
   name: packageName,
   version: packageVersion,
@@ -47,9 +52,12 @@ if (packageVersionInfo == null) {
   throw new Error('Failed to get package version info');
 }
 
-// new Date(1704846558567),
+// Get package info for top level package + its dependency tree
+
 const packageInfos = await getLatestInfoAtTime(packageVersionInfo);
 packageInfos.sort((a, b) => a.name.localeCompare(b.name));
+
+// Output info to files
 
 const pinnedVersions = packageInfos.reduce((memo, info) => {
   memo[info.name] = info.version;
@@ -62,6 +70,9 @@ fs.writeFileSync(
   JSON.stringify(pinnedVersions, null, 2)
 );
 
+/**
+ * Get info for npm package with given name + version.
+ */
 async function getPackageVersionInfo({
   name,
   version,
@@ -87,6 +98,9 @@ async function getPackageVersionInfo({
   };
 }
 
+/**
+ * Get latest package info for given package name at given time.
+ */
 async function getLatestInfoAtTime({
   name,
   time,
@@ -142,6 +156,9 @@ async function getLatestInfoAtTime({
   return packageInfos;
 }
 
+/**
+ * Fetch data from npmjs registry apis.
+ */
 async function fetchNpmJson<T>(path: string) {
   console.log(`Fetching info for npm package: ${path}`);
   try {
