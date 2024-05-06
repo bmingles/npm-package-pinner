@@ -146,6 +146,8 @@ async function getLatestInfoAtTime({
       const toAdd = Object.keys(dependencies).filter(
         name => !visited.has(name)
       );
+
+      // ensure we only process a package name 1x
       toAdd.forEach(n => {
         visited.add(n);
       });
